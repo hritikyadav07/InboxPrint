@@ -104,82 +104,86 @@ router.get("/get-email-ids-date-range", checkAuth, async (req, res) => {
 });
 
 
-// router.get("/download-pdf/:id", checkAuth, async (req, res) => {
-//   try {
+router.get("/download-pdf/:id", checkAuth, async (req, res) => {
+  try {
     
-//     const pdfBuffer = await generateEmailPDF(req.accessToken, req.params.id);
+    const pdfBuffer = await generateEmailPDF(req.accessToken, req.params.id);
 
-//     res.setHeader("Content-Type", "application/pdf");
-//     res.setHeader(
-//       "Content-Disposition",
-//       `attachment; filename="email_${req.params.id}.pdf"`
-//     );
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="email_${req.params.id}.pdf"`
+    );
 
-//     const pdfStream = new stream.PassThrough();
-//     pdfStream.end(pdfBuffer);
-//     pdfStream.pipe(res);
-//   } catch (error) {
-//     console.error("Error generating PDF:", error);
-//     res.status(500).send("Error generating PDF.");
-//   }
-// });
+    const pdfStream = new require("stream").PassThrough();
+    pdfStream.end(pdfBuffer);
+    pdfStream.pipe(res);
+  } catch (error) {
+    console.error("Error generating PDF:", error);
+    res.status(500).send("Error generating PDF.");
+  }
+});
 
-// router.get('/download-pdf-email-from', checkAuth, async (req, res) => {
-//   if (!req.query.from) {
-//     return res.status(400).send("Missing required query parameter: 'from'");
-//   }
+router.get('/download-pdf-email-from', checkAuth, async (req, res) => {
+  if (!req.query.from) {
+    return res.status(400).send("Missing required query parameter: 'from'");
+  }
 
-//   try {
-//     const emailIds = await fetchFilteredEmailIds(req.accessToken, {
-//       from: req.query.from,
-//     });
+  try {
+    const emailIds = await fetchFilteredEmailIds(req.accessToken, {
+      from: req.query.from,
+    });
 
-//     const pdfBuffer = await generateNEmailsPDF(req.accessToken, emailIds);
-//     console.log(pdfBuffer);
+    if (!emailIds || emailIds.length === 0) {
+      return res.status(400).send("No email found from the specified sender.");
+    }
 
-//     res.setHeader("Content-Type", "application/pdf");
-//     res.setHeader(
-//       "Content-Disposition",
-//       `attachment; filename="emails_from_${req.query.from}.pdf"`
-//     );
+    const pdfBuffer = await generateNEmailsPDF(req.accessToken, emailIds);
+    // console.log(pdfBuffer);
 
-//     const pdfStream = new stream.PassThrough();
-//     pdfStream.end(pdfBuffer);
-//     pdfStream.pipe(res);
-//   } catch (error) {
-//     console.error("Error generating PDF:", error);
-//     res.status(500).send("Error generating PDF.");
-//   }
-// });
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="emails_from_${req.query.from}.pdf"`
+    );
 
-// router.get('/download-pdf-emails-date-range', checkAuth, async (req, res) => {
-//   if (!req.query.after || !req.query.before) {
-//     return res
-//       .status(400)
-//       .send("Missing required query parameters: 'after' and 'before'");
-//   }
+    const pdfStream = new stream.PassThrough();
+    pdfStream.end(pdfBuffer);
+    pdfStream.pipe(res);
+  } catch (error) {
+    console.error("Error generating PDF:", error);
+    res.status(500).send("Error generating PDF.");
+  }
+});
 
-//   try {
-//     const emailIds = await fetchFilteredEmailIds(req.accessToken, {
-//       after: req.query.after,
-//       before: req.query.before,
-//     });
+router.get('/download-pdf-emails-date-range', checkAuth, async (req, res) => {
+  if (!req.query.after || !req.query.before) {
+    return res
+      .status(400)
+      .send("Missing required query parameters: 'after' and 'before'");
+  }
 
-//     const pdfBuffer = await generateNEmailsPDF(req.accessToken, emailIds);
+  try {
+    const emailIds = await fetchFilteredEmailIds(req.accessToken, {
+      after: req.query.after,
+      before: req.query.before,
+    });
 
-//     res.setHeader("Content-Type", "application/pdf");
-//     res.setHeader(
-//       "Content-Disposition",
-//       `attachment; filename="emails_${req.query.after}_to_${req.query.before}.pdf"`
-//     );
+    const pdfBuffer = await generateNEmailsPDF(req.accessToken, emailIds);
 
-//     const pdfStream = new stream.PassThrough();
-//     pdfStream.end(pdfBuffer);
-//     pdfStream.pipe(res);
-//   } catch (error) {
-//     console.error("Error generating PDF:", error);
-//     res.status(500).send("Error generating PDF.");
-//   }
-// });
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="emails_${req.query.after}_to_${req.query.before}.pdf"`
+    );
+
+    const pdfStream = new stream.PassThrough();
+    pdfStream.end(pdfBuffer);
+    pdfStream.pipe(res);
+  } catch (error) {
+    console.error("Error generating PDF:", error);
+    res.status(500).send("Error generating PDF.");
+  }
+});
 
 module.exports = router;

@@ -34,14 +34,19 @@ async function fetchEmailById(gmail, emailId) {
     userId: "me",
     id: emailId,
   });
+  // console.log("Message fetched:", message.data);
 
   const headers = message.data.payload.headers;
   const subject = headers.find((h) => h.name === "Subject")?.value || "No Subject";
   const from = headers.find((h) => h.name === "From")?.value || "Unknown Sender";
   const snippet = message.data.snippet || "No preview available";
 
+  // ✅ Extracting email body
+  // Nowadays body is stored in parts, so we need to find the right part
+  // these parts can be text/plain, text/html, images, pdfs, etc.
   let emailBody = "No body available";
   if (message.data.payload.parts) {
+    // console.log("Message parts:", message.data.payload.parts);
     const part = message.data.payload.parts.find((p) => p.mimeType === "text/html");
     if (part && part.body && part.body.data) {
       emailBody = Buffer.from(part.body.data, "base64").toString("utf-8");
