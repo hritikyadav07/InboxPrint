@@ -12,7 +12,7 @@ InboxPrint is a backend server built with Node.js and Express that fetches email
 ## Installation and Running the Project
 1. Clone the repository:
    ```bash
-   git clone [<repository-url>](https://github.com/hritikyadav07/InboxPrint)
+   git clone https://github.com/hritikyadav07/InboxPrint
    ```
 2. Navigate to the project directory:
    ```bash
