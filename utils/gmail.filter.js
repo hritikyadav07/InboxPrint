@@ -1,6 +1,23 @@
 const { google } = require("googleapis");
+const winston = require('winston');
 
-async function fetchFilteredEmails(accessToken, filters) {
+const MAX_RESULTS = process.env.MAX_RESULTS || 20; // Default to 20 if not set
+
+// Configure Winston logger
+const logger = winston.createLogger({
+  level: 'info',
+  format: winston.format.combine(
+    winston.format.timestamp(),
+    winston.format.printf(({ timestamp, level, message }) => `${timestamp} [${level}]: ${message}`)
+  ),
+  transports: [
+    new winston.transports.Console(),
+    new winston.transports.File({ filename: 'logs/gmail_filter.log' })
+  ]
+});
+
+async function fetchFilteredEmails(accessToken, filters, maxResults = MAX_RESULTS) {
+  logger.info(`Fetching emails with filters: ${JSON.stringify(filters)}`);
   const oauth2Client = new google.auth.OAuth2();
   oauth2Client.setCredentials({ access_token: accessToken });
 
@@ -12,19 +29,25 @@ async function fetchFilteredEmails(accessToken, filters) {
   if (filters.after) query += `after:${filters.after} `;
   if (filters.before) query += `before:${filters.before} `;
   if (filters.id) {
+    logger.info(`Fetching email by ID: ${filters.id}`);
     const email = await fetchEmailById(gmail, filters.id);
+    logger.info(`Email fetched successfully for ID: ${filters.id}`);
     return [email]; // wrap in an array for consistency
   }
 
   const response = await gmail.users.messages.list({
     userId: "me",
     q: query.trim(),
-    maxResults: 20,
+    maxResults: parseInt(maxResults, 10),
   });
 
   const messages = response.data.messages || [];
-  if (messages.length === 0) return [];
+  if (messages.length === 0) {
+    logger.warn(`No emails found with the provided filters.`);
+    return [];
+  }
 
+  logger.info(`Found ${messages.length} emails. Fetching details...`);
   return await Promise.all(messages.map(async (msg) => fetchEmailById(gmail, msg.id)));
 }
 
@@ -69,6 +92,5 @@ async function fetchFilteredEmailIds(accessToken, filters) {
 
   return emailIds;
 }
-
 
 module.exports = { fetchFilteredEmails, fetchFilteredEmailIds };
