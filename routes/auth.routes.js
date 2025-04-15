@@ -16,11 +16,11 @@ router.get('/google/callback',
     }
 );
 
-  // Logout route
+// Logout route
 router.get("/logout", (req, res) => {
     req.logout(() => {
         req.session = null;
-        res.redirect("/");
+        res.status(200).json({ message: "Successfully logged out" });
     });
 });
 
